@@ -2974,6 +2974,14 @@ function! fugitive#BufReadStatus(cmdbang) abort
       call s:AddLogSection('Unpulled from ' . pull_short, s:QueryLogRange(head, pull_ref, dir))
     endif
 
+    " *** Recent commits section
+    if exists('g:fugitive_recent_commits') && g:fugitive_recent_commits > 0
+        let recent_commits = s:QueryLog([head], g:fugitive_recent_commits + 1, dir)
+        if recent_commits.error == 0
+            call s:AddLogSection('Recent commits', recent_commits)
+        endif
+    endif
+
     setlocal nomodified readonly noswapfile
     doautocmd BufReadPost
     setlocal nomodifiable
