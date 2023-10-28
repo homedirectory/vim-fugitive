@@ -456,6 +456,24 @@ function! s:add_methods(namespace, method_names) abort
   endfor
 endfunction
 
+" Section: Fugitive user config
+function! s:FugitiveUserData(...)
+    let data = get(g:, 'fugitive_user', {})
+    if a:0
+        return get(data, a:1, a:0 >= 2 ? a:2 : "")
+    else
+        return data
+endfunction
+
+function! s:UserGitOptions(...)
+    let opts = get(s:FugitiveUserData(), 'git_options', {})
+    if a:0
+        return get(opts, a:1, a:0 >= 2 ? a:2 : "")
+    else
+        return opts
+    endif
+endfunction
+
 " Section: Git
 
 let s:run_jobs = (exists('*ch_close_in') || exists('*jobstart')) && exists('*bufwinid')
@@ -7645,14 +7663,6 @@ function! s:RebaseArgument() abort
   return s:SquashArgument(' %s^')
 endfunction
 
-function! s:StandardOpts(key)
-    return get(get(g:, 'fugitive_git_options', {}), a:key, '')
-endfunction
-
-function! s:StandardRebaseOpts()
-    return s:StandardOpts('rebase')
-endfunction
-
 function! s:NavigateUp(count) abort
   let rev = substitute(s:DirRev(@%)[1], '^$', ':', 'g')
   let c = a:count
@@ -7728,9 +7738,9 @@ function! s:MapGitOps(is_ftplugin) abort
   exe s:Map('n', 'cRe', ':<C-U>Git commit --reset-author --amend --no-edit<CR>', '<silent>', ft)
   exe s:Map('n', 'cRw', ':<C-U>Git commit --reset-author --amend --only<CR>', '<silent>', ft)
   exe s:Map('n', 'cf', ':<C-U>Git commit --fixup=<C-R>=<SID>SquashArgument()<CR>', '', ft)
-  exe s:Map('n', 'cF', ':<C-U><Bar>Git -c sequence.editor=true rebase ' .. s:StandardRebaseOpts() .. ' --interactive --autosquash<C-R>=<SID>RebaseArgument()<CR><Home>Git commit --fixup=<C-R>=<SID>SquashArgument()<CR>', '', ft)
+  exe s:Map('n', 'cF', ':<C-U><Bar>Git -c sequence.editor=true rebase ' .. s:UserGitOptions('rebase') .. ' --interactive --autosquash<C-R>=<SID>RebaseArgument()<CR><Home>Git commit --fixup=<C-R>=<SID>SquashArgument()<CR>', '', ft)
   exe s:Map('n', 'cs', ':<C-U>Git commit --no-edit --squash=<C-R>=<SID>SquashArgument()<CR>', '', ft)
-  exe s:Map('n', 'cS', ':<C-U><Bar>Git -c sequence.editor=true rebase ' .. s:StandardRebaseOpts() .. '--interactive --autosquash<C-R>=<SID>RebaseArgument()<CR><Home>Git commit --no-edit --squash=<C-R>=<SID>SquashArgument()<CR>', '', ft)
+  exe s:Map('n', 'cS', ':<C-U><Bar>Git -c sequence.editor=true rebase ' .. s:UserGitOptions('rebase') .. '--interactive --autosquash<C-R>=<SID>RebaseArgument()<CR><Home>Git commit --no-edit --squash=<C-R>=<SID>SquashArgument()<CR>', '', ft)
   exe s:Map('n', 'cA', ':<C-U>Git commit --edit --squash=<C-R>=<SID>SquashArgument()<CR>', '', ft)
   exe s:Map('n', 'c?', ':<C-U>help fugitive_c<CR>', '<silent>', ft)
 
@@ -7768,15 +7778,15 @@ function! s:MapGitOps(is_ftplugin) abort
 
   exe s:Map('n', 'r<Space>', ':Git rebase<Space>', '', ft)
   exe s:Map('n', 'r<CR>', ':Git rebase<CR>', '', ft)
-  exe s:Map('n', 'ri', ':<C-U>Git rebase ' .. s:StandardRebaseOpts() .. ' --interactive<C-R>=<SID>RebaseArgument()<CR><CR>', '<silent>', ft)
+  exe s:Map('n', 'ri', ':<C-U>Git rebase ' .. s:UserGitOptions('rebase') .. ' --interactive<C-R>=<SID>RebaseArgument()<CR><CR>', '<silent>', ft)
   exe s:Map('n', 'rf', ':<C-U>Git -c sequence.editor=true rebase --interactive --autosquash<C-R>=<SID>RebaseArgument()<CR><CR>', '<silent>', ft)
-  exe s:Map('n', 'ru', ':<C-U>Git rebase ' .. s:StandardRebaseOpts() .. ' --interactive @{upstream}<CR>', '<silent>', ft)
-  exe s:Map('n', 'rp', ':<C-U>Git rebase ' .. s:StandardRebaseOpts() .. ' --interactive @{push}<CR>', '<silent>', ft)
-  exe s:Map('n', 'rw', ':<C-U>Git rebase ' .. s:StandardRebaseOpts() .. ' --interactive<C-R>=<SID>RebaseArgument()<CR><Bar>s/^pick/reword/e<CR>', '<silent>', ft)
-  exe s:Map('n', 'rm', ':<C-U>Git rebase ' .. s:StandardRebaseOpts() .. ' --interactive<C-R>=<SID>RebaseArgument()<CR><Bar>s/^pick/edit/e<CR>', '<silent>', ft)
-  exe s:Map('n', 'rd', ':<C-U>Git rebase ' .. s:StandardRebaseOpts() .. ' --interactive<C-R>=<SID>RebaseArgument()<CR><Bar>s/^pick/drop/e<CR>', '<silent>', ft)
-  exe s:Map('n', 'rk', ':<C-U>Git rebase ' .. s:StandardRebaseOpts() .. ' --interactive<C-R>=<SID>RebaseArgument()<CR><Bar>s/^pick/drop/e<CR>', '<silent>', ft)
-  exe s:Map('n', 'rx', ':<C-U>Git rebase ' .. s:StandardRebaseOpts() .. ' --interactive<C-R>=<SID>RebaseArgument()<CR><Bar>s/^pick/drop/e<CR>', '<silent>', ft)
+  exe s:Map('n', 'ru', ':<C-U>Git rebase ' .. s:UserGitOptions('rebase') .. ' --interactive @{upstream}<CR>', '<silent>', ft)
+  exe s:Map('n', 'rp', ':<C-U>Git rebase ' .. s:UserGitOptions('rebase') .. ' --interactive @{push}<CR>', '<silent>', ft)
+  exe s:Map('n', 'rw', ':<C-U>Git rebase ' .. s:UserGitOptions('rebase') .. ' --interactive<C-R>=<SID>RebaseArgument()<CR><Bar>s/^pick/reword/e<CR>', '<silent>', ft)
+  exe s:Map('n', 'rm', ':<C-U>Git rebase ' .. s:UserGitOptions('rebase') .. ' --interactive<C-R>=<SID>RebaseArgument()<CR><Bar>s/^pick/edit/e<CR>', '<silent>', ft)
+  exe s:Map('n', 'rd', ':<C-U>Git rebase ' .. s:UserGitOptions('rebase') .. ' --interactive<C-R>=<SID>RebaseArgument()<CR><Bar>s/^pick/drop/e<CR>', '<silent>', ft)
+  exe s:Map('n', 'rk', ':<C-U>Git rebase ' .. s:UserGitOptions('rebase') .. ' --interactive<C-R>=<SID>RebaseArgument()<CR><Bar>s/^pick/drop/e<CR>', '<silent>', ft)
+  exe s:Map('n', 'rx', ':<C-U>Git rebase ' .. s:UserGitOptions('rebase') .. ' --interactive<C-R>=<SID>RebaseArgument()<CR><Bar>s/^pick/drop/e<CR>', '<silent>', ft)
   exe s:Map('n', 'rr', ':<C-U>Git rebase --continue<CR>', '<silent>', ft)
   exe s:Map('n', 'rs', ':<C-U>Git rebase --skip<CR>', '<silent>', ft)
   exe s:Map('n', 're', ':<C-U>Git rebase --edit-todo<CR>', '<silent>', ft)
