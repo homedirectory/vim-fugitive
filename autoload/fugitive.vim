@@ -5051,8 +5051,7 @@ function! s:StageDelete(lnum1, lnum2, count) abort
       elseif info.status ==# 'D'
         let undo = 'GRemove'
       elseif info.paths[0] =~# '/$'
-        let err .= '|echoerr ' . string('fugitive: will not delete directory ' . string(info.relative[0]))
-        break
+        let undo = ''
       else
         let undo = 'Gread ' . s:TreeChomp('hash-object', '-w', '--', info.paths[0])[0:10]
       endif
@@ -5064,7 +5063,7 @@ function! s:StageDelete(lnum1, lnum2, count) abort
         endif
         call s:TreeChomp('submodule', 'update', '--', info.paths[0])
       elseif info.status ==# '?'
-        call s:TreeChomp('clean', '-f', '--', info.paths[0])
+        call s:TreeChomp('clean', '-d', '-f', '--', info.paths[0])
       elseif a:count == 2
         if get(b:fugitive_files['Staged'], info.filename, {'status': ''}).status ==# 'D'
           call delete(info.paths[0])
@@ -5104,14 +5103,16 @@ function! s:StageDelete(lnum1, lnum2, count) abort
   catch /^fugitive:/
     let err .= '|echoerr ' . string(v:exception)
   endtry
+
+  exe s:ReloadStatus()
+  call s:StageReveal()
+
   if empty(restore)
     if len(reset_commit) && empty(err)
       call feedkeys(':Git reset ' . reset_commit)
     endif
     return err[1:-1]
   endif
-  exe s:ReloadStatus()
-  call s:StageReveal()
   return 'checktime|redraw|echomsg ' . string('To restore, ' . join(restore, '|')) . err
 endfunction
 
