@@ -462,6 +462,7 @@ function! s:FugitiveUserData(...)
         return get(data, a:1, a:0 >= 2 ? a:2 : "")
     else
         return data
+    endif
 endfunction
 
 function! s:UserGitOptions(...)
