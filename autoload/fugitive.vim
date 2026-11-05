@@ -2599,7 +2599,7 @@ function! s:ReplaceCmd(cmd) abort
 endfunction
 
 function! s:FormatLog(dict) abort
-  return a:dict.commit . ' ' . a:dict.subject
+  return a:dict.commit . (get(a:dict, 'signature', '') ==# 'N' ? ' U' : '') . ' ' . a:dict.subject
 endfunction
 
 function! s:FormatRebase(dict) abort
@@ -2656,9 +2656,9 @@ function! s:AddDiffSection(to, stat, label, files) abort
 endfunction
 
 function! s:QueryLog(refspec, limit, dir) abort
-  let [log, exec_error] = s:LinesError(['log', '-n', '' . a:limit, '--pretty=format:%h%x09%s'] + a:refspec + ['--'], a:dir)
+  let [log, exec_error] = s:LinesError(['log', '-n', '' . a:limit, '--pretty=format:%h%x09%G?%x09%s'] + a:refspec + ['--'], a:dir)
   call map(log, 'split(v:val, "\t", 1)')
-  call map(log, '{"type": "Log", "commit": v:val[0], "subject": join(v:val[1 : -1], "\t")}')
+  call map(log, '{"type": "Log", "commit": v:val[0], "signature": get(v:val, 1, ""), "subject": join(v:val[2 : -1], "\t")}')
   let result = {'error': exec_error ? 1 : 0, 'overflow': 0, 'entries': log}
   if len(log) == a:limit
     call remove(log, -1)
